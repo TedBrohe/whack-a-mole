@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>두더지를 잡아라</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: white;
+            overflow: hidden;
+        }
+        
+        #container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+        
+        #statusBar {
+            background: linear-gradient(180deg, #2a2a3e 0%, #232338 100%);
+            padding: 15px 25px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 3px solid #4CAF50;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+        
+        #statusBar .status-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+        }
+        
+        #detectionTimer {
+            font-size: 28px;
+            font-weight: bold;
+            color: #4CAF50;
+            text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+            font-family: 'Courier New', monospace;
+        }
+        
+        #detectionStatus {
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        #detectionStatus.detecting {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+        }
+        
+        #detectionStatus.unknown {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            color: white;
+        }
+        
+        #currentZoom, #currentHeading {
+            margin-left: 10px;
+            font-weight: bold;
+            color: #4CAF50;
+            text-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+            font-family: 'Courier New', monospace;
+        }
+        
+        #canvasContainer {
+            flex: 1;
+            position: relative;
+            background: #0a0a0a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        #canvas {
+            display: block;
+            max-width: 100%;
+            max-height: 100%;
+            aspect-ratio: 1 / 1;
+        }
+        
+        #minimap {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 112px;
+            height: 112px;
+            border: 2px solid #666;
+            background: rgba(0, 0, 0, 0.5);
+            opacity: 0.7;
+        }
+        
+        #controlPanel {
+            background: linear-gradient(180deg, #232338 0%, #1a1a2e 100%);
+            padding: 12px 15px;
+            border-top: 3px solid #4CAF50;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
+        }
+        
+        .control-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            background: rgba(255,255,255,0.05);
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .control-group label {
+            font-weight: 600;
+            font-size: 12px;
+            color: #aaa;
+        }
+        
+        button {
+            padding: 8px 16px;
+            font-size: 12px;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            background: linear-gradient(135deg, #4a4a5e 0%, #3a3a4e 100%);
+            color: white;
+            transition: all 0.3s;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+            background: linear-gradient(135deg, #5a5a6e 0%, #4a4a5e 100%);
+        }
+        
+        button.active {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+        }
+        
+        button:disabled {
+            background: linear-gradient(135deg, #333 0%, #2a2a2a 100%);
+            color: #666;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        #bankSlider {
+            width: 180px;
+            height: 6px;
+            -webkit-appearance: none;
+            appearance: none;
+            background: linear-gradient(90deg, #f44336 0%, #888 50%, #4CAF50 100%);
+            outline: none;
+            border-radius: 3px;
+        }
+        
+        #bankSlider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: white;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #4CAF50;
+        }
+        
+        #bankSlider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            background: white;
+            cursor: pointer;
+            border-radius: 50%;
+            border: 2px solid #4CAF50;
+        }
+        
+        #bankSlider:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        
+        #bankValue {
+            min-width: 55px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+            color: #4CAF50;
+            font-family: 'Courier New', monospace;
+        }
+        
+        .bank-label {
+            font-size: 11px;
+            font-weight: bold;
+            color: #888;
+            min-width: 12px;
+        }
+        
+        .bank-label.left { color: #f44336; }
+        .bank-label.right { color: #4CAF50; }
+        
+        #catchMoleBtn {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+            font-weight: bold;
+            font-size: 13px;
+            padding: 10px 20px;
+        }
+        
+        #catchMoleBtn:not(:disabled) {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        }
+        
+        #resetBtn {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+        }
+        
+        #startScreen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        
+        #startScreen.hidden { display: none; }
+        
+        #startScreen h1 {
+            font-size: 52px;
+            margin-bottom: 40px;
+            color: #4CAF50;
+            text-shadow: 0 0 30px rgba(76, 175, 80, 0.6);
+        }
+        
+        #startBtn {
+            padding: 20px 60px;
+            font-size: 24px;
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        }
+        
+        #zoomButtons {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            display: none;
+            flex-direction: column;
+            gap: 8px;
+            background: rgba(35, 35, 56, 0.95);
+            padding: 12px;
+            border-radius: 10px;
+        }
+        
+        #zoomButtons.visible { display: flex; }
+        #zoomButtons button { padding: 8px 16px; min-width: 50px; }
+    </style>
+</head>
+<body>
+    <div id="startScreen">
+        <h1>두더지를 잡아보자</h1>
+        <button id="startBtn">시작</button>
+    </div>
+    
+    <div id="container">
+        <div id="statusBar">
+            <div class="status-item">
+                <span>감지:</span>
+                <span id="detectionTimer">00:00</span>
+            </div>
+            <div class="status-item">
+                <span id="detectionStatus" class="unknown">어디갔누?</span>
+            </div>
+            <div class="status-item">
+                <span>줌:</span>
+                <span id="currentZoom">4x</span>
+            </div>
+            <div class="status-item">
+                <span>헤딩:</span>
+                <span id="currentHeading">000</span>
+            </div>
+        </div>
+        
+        <div id="canvasContainer">
+            <canvas id="canvas"></canvas>
+            <canvas id="minimap"></canvas>
+            <div id="zoomButtons">
+                <button class="zoom-btn" data-zoom="0">20</button>
+                <button class="zoom-btn" data-zoom="1">16</button>
+                <button class="zoom-btn" data-zoom="2">8</button>
+                <button class="zoom-btn active" data-zoom="3">4</button>
+                <button class="zoom-btn" data-zoom="4">2</button>
+                <button class="zoom-btn" data-zoom="5">1</button>
+            </div>
+        </div>
+        
+        <div id="controlPanel">
+            <div class="control-group">
+                <label>Bank:</label>
+                <span class="bank-label left">L</span>
+                <input type="range" id="bankSlider" min="-30" max="30" value="0" step="1">
+                <span class="bank-label right">R</span>
+                <span id="bankValue">0°</span>
+            </div>
+            
+            <div class="control-group">
+                <button id="dropBeaconBtn">방울놓기</button>
+                <button id="predictBtn">예상하기</button>
+                <button id="markBtn">마크하기</button>
+                <button id="navigateBtn">화면조정</button>
+                <button id="peekBtn">엿보기</button>
+                <button id="eraserBtn">지우개</button>
+            </div>
+            
+            <div class="control-group">
+                <button id="catchMoleBtn" disabled>두더지 잡기</button>
+                <button id="resetBtn">리셋</button>
+            </div>
+        </div>
+    </div>
+    
+<script>
+(function() {
+    'use strict';
+    
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const minimap = document.getElementById('minimap');
+    const mmCtx = minimap.getContext('2d');
+    
+    const MAP_SIZE = 20;
+    const ZOOM_LEVELS = [20, 16, 8, 4, 2, 1];
+    const AIRCRAFT_SPEED = 200;
+
+    const MOLE_SPEED = Math.floor(Math.random()*7)+3;
+    const FIXED_RANGE = 4;
+
+    const BEACON_RANGE = 0.5;
+    const DETECTION_REQUIRED_TIME = 1200000; // 20 minutes in milliseconds
+    
+    let gameStarted = false;
+    let catchAttemptsFailed = 0;
+    
+    let gameState = {
+        aircraft: { x: 0, y: 0, heading: 0, bank: 0, speed: AIRCRAFT_SPEED / 3600, turnRate: 0 },
+        mole: { x: 0, y: 0, heading: 0, speed: MOLE_SPEED / 3600, directionChanges: 0, maxChanges: 0, nextChangeTime: 0, history: [] },
+        beacons: [],
+        marks: [],
+        predictionCircle: null,
+        view: { zoom: 3, offsetX: 0, offsetY: 0 },
+        activeMode: null,
+        peekMode: false,
+        detectionStartTime: null,
+        detectionTime: 0,
+        isDetecting: false,
+        lastUpdateTime: Date.now()
+    };
+    
+    function resizeCanvas() {
+        const container = canvas.parentElement;
+        const size = Math.min(container.offsetWidth, container.offsetHeight);
+        canvas.width = size;
+        canvas.height = size;
+        minimap.width = 112;
+        minimap.height = 112;
+    }
+    
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+    
+    function initGame() {
+        const spawnAngle = Math.random() * Math.PI * 2;
+        const spawnDistance = Math.random() * 2 + 3;
+        gameState.aircraft = {
+            x: Math.cos(spawnAngle) * spawnDistance,
+            y: Math.sin(spawnAngle) * spawnDistance,
+            heading: Math.random() * Math.PI * 2,
+            bank: 0,
+            speed: AIRCRAFT_SPEED / 3600,
+            turnRate: 0
+        };
+        
+        const initialAngle = Math.random() * Math.PI * 2;
+        const initialDistance = Math.random() * 0.2 + 0.2; // 0.2 to 0.4 nm
+        const moleX = Math.cos(initialAngle) * initialDistance;
+        const moleY = Math.sin(initialAngle) * initialDistance;
+        const angleFromCenter = Math.atan2(moleX, moleY);
+        const randomOffset = (Math.floor(Math.random() * 37) - 18) * 5 * Math.PI / 180;
+        
+        gameState.mole = {
+            x: moleX,
+            y: moleY,
+            heading: angleFromCenter + randomOffset,
+            speed: MOLE_SPEED / 3600,
+            directionChanges: 0,
+            maxChanges: Math.floor(Math.random() * 3) + 3,
+            nextChangeTime: Date.now() + (Math.random() * 2 + 8) * 60000,
+            history: []
+        };
+        
+        gameState.beacons = [{
+            id: 1, x: 0, y: 0, bearing: null,
+            lastUpdate: Date.now(),
+            nextUpdate: Date.now() + 30000,
+            createdAt: Date.now() - 30000,
+            fadeOut: false, fadeAlpha: 1
+        }];
+        
+        gameState.marks = [];
+        gameState.predictionCircle = null;
+        gameState.view = { zoom: 3, offsetX: 0, offsetY: 0 }; // zoom index 3 = 4nm
+        gameState.activeMode = null;
+        gameState.peekMode = false;
+        gameState.detectionStartTime = null;
+        gameState.detectionTime = 0;
+        gameState.isDetecting = false;
+        gameState.lastUpdateTime = Date.now();
+        catchAttemptsFailed = 0;
+        
+        document.getElementById('bankSlider').value = 0;
+        document.getElementById('bankSlider').disabled = false;
+        updateBankValue();
+        updateDetectionUI();
+        updateZoomDisplay();
+        updateHeadingDisplay();
+    }
+    
+    function updateAircraft(dt) {
+        const bank = gameState.aircraft.bank;
+        const speed = gameState.aircraft.speed;
+        const g = 32.2;
+        const bankRad = bank * Math.PI / 180;
+        const speedFtPerSec = speed * 6076;
+        const turnRate = (g * Math.tan(bankRad)) / speedFtPerSec;
+        
+        gameState.aircraft.turnRate = turnRate;
+        gameState.aircraft.heading += turnRate * dt;
+        
+        while (gameState.aircraft.heading > Math.PI * 2) gameState.aircraft.heading -= Math.PI * 2;
+        while (gameState.aircraft.heading < 0) gameState.aircraft.heading += Math.PI * 2;
+        
+        gameState.aircraft.x += Math.sin(gameState.aircraft.heading) * speed * dt;
+        gameState.aircraft.y += Math.cos(gameState.aircraft.heading) * speed * dt;
+        
+        const mapBounds = MAP_SIZE / 2;
+        if (Math.abs(gameState.aircraft.x) > mapBounds || Math.abs(gameState.aircraft.y) > mapBounds) {
+            alert('고양이가 운동장을 벗어났습니다!');
+            gameStarted = false;
+            document.getElementById('startScreen').classList.remove('hidden');
+        }
+    }
+
+    function updateMole(dt) {
+        const now = Date.now();
+        
+        if (gameState.mole.directionChanges < gameState.mole.maxChanges && now >= gameState.mole.nextChangeTime) {            
+            const minDeg = 20;
+            const maxDeg = 90;
+            const stepDeg = 5;
+            const steps = (maxDeg - minDeg) / stepDeg;
+            const randomStep = Math.floor(Math.random() * (steps + 1));
+            const turnDeg = minDeg + (randomStep * stepDeg);
+            const direction = Math.random() < 0.5 ? -1 : 1;
+            const turnRad = (turnDeg * direction) * Math.PI / 180;
+            gameState.mole.heading += turnRad;
+            gameState.mole.directionChanges++;
+            gameState.mole.speed = Math.floor(Math.random()*7)+3;  // speed changes
+            gameState.mole.nextChangeTime = now + (Math.random() * 4 + 6) * 60000;
+        }
+        
+        gameState.mole.x += Math.sin(gameState.mole.heading) * gameState.mole.speed * dt;
+        gameState.mole.y += Math.cos(gameState.mole.heading) * gameState.mole.speed * dt;
+        
+        if (gameState.mole.history.length === 0 || now - gameState.mole.history[gameState.mole.history.length - 1].time >= 30000) {
+            gameState.mole.history.push({ x: gameState.mole.x, y: gameState.mole.y, time: now });
+        }
+        
+        const distFromCenter = Math.sqrt(gameState.mole.x ** 2 + gameState.mole.y ** 2);
+        if (distFromCenter > 10) {
+            alert('두더지가 도망쳤습니다ㅠ');
+            gameStarted = false;
+            document.getElementById('startScreen').classList.remove('hidden');
+        }
+    }
+    
+    function updateBeacons() {
+        const now = Date.now();
+        let anyDetecting = false;
+        let syncTime = null;
+        
+        gameState.beacons.forEach(beacon => {
+            const dx = gameState.mole.x - beacon.x;
+            const dy = gameState.mole.y - beacon.y;
+            const distance = Math.sqrt(dx ** 2 + dy ** 2);
+            const isActive = now - beacon.createdAt >= 30000;
+            
+            if (distance <= BEACON_RANGE) {
+                anyDetecting = true;
+                if (isActive) {
+                    if (beacon.bearing === null || now >= beacon.nextUpdate) {
+                        beacon.bearing = Math.atan2(dx, dy);
+                        beacon.lastUpdate = now;
+                        beacon.nextUpdate = now + 30000;
+                        beacon.fadeOut = false;
+                        beacon.fadeAlpha = 1;
+                        if (syncTime === null) syncTime = beacon.nextUpdate;
+                    }
+                }
+            } else {
+                if (beacon.bearing !== null) beacon.fadeOut = true;
+            }
+        });
+        
+        if (syncTime !== null) {
+            gameState.beacons.forEach(beacon => {
+                const dx = gameState.mole.x - beacon.x;
+                const dy = gameState.mole.y - beacon.y;
+                const distance = Math.sqrt(dx ** 2 + dy ** 2);
+                const isActive = now - beacon.createdAt >= 30000;
+                if (distance <= BEACON_RANGE && beacon.bearing !== null && isActive) {
+                    beacon.nextUpdate = syncTime;
+                }
+            });
+        }
+        
+        gameState.beacons.forEach(beacon => {
+            if (beacon.fadeOut && beacon.bearing !== null) {
+                beacon.fadeAlpha -= 0.02;
+                if (beacon.fadeAlpha <= 0) {
+                    beacon.bearing = null;
+                    beacon.fadeOut = false;
+                    beacon.fadeAlpha = 1;
+                }
+            }
+        });
+        
+        if (anyDetecting) {
+            if (!gameState.isDetecting) {
+                gameState.detectionStartTime = now;
+                gameState.isDetecting = true;
+            }
+            gameState.detectionTime = now - gameState.detectionStartTime;
+        } else {
+            gameState.detectionStartTime = null;
+            gameState.detectionTime = 0;
+            gameState.isDetecting = false;
+        }
+        
+        document.getElementById('catchMoleBtn').disabled = gameState.detectionTime < DETECTION_REQUIRED_TIME;
+    }
+    
+    function updatePredictionCircle(dt) {
+        if (gameState.predictionCircle) {
+            gameState.predictionCircle.radius += gameState.predictionCircle.speed * dt;
+        }
+    }
+    
+    function updateDetectionUI() {
+        const minutes = Math.floor(gameState.detectionTime / 60000);
+        const seconds = Math.floor((gameState.detectionTime % 60000) / 1000);
+        document.getElementById('detectionTimer').textContent = 
+            String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+        
+        const statusEl = document.getElementById('detectionStatus');
+        statusEl.textContent = gameState.isDetecting ? '감지중!' : '어디갔누?';
+        statusEl.className = gameState.isDetecting ? 'detecting' : 'unknown';
+    }
+    
+    function updateZoomDisplay() {
+        document.getElementById('currentZoom').textContent = ZOOM_LEVELS[gameState.view.zoom] + 'x';
+        document.querySelectorAll('.zoom-btn').forEach(btn => {
+            btn.classList.toggle('active', parseInt(btn.getAttribute('data-zoom')) === gameState.view.zoom);
+        });
+    }
+    
+    function updateHeadingDisplay() {
+        const headingDeg = Math.round(gameState.aircraft.heading * 180 / Math.PI) % 360;
+        const normalizedHeading = headingDeg < 0 ? headingDeg + 360 : headingDeg;
+        document.getElementById('currentHeading').textContent = String(normalizedHeading).padStart(3, '0');
+    }
+    
+    function updateBankValue() {
+        document.getElementById('bankValue').textContent = gameState.aircraft.bank.toFixed(0) + '°';
+    }
+    
+    function update() {
+        const now = Date.now();
+        const dt = (now - gameState.lastUpdateTime) / 1000;
+        gameState.lastUpdateTime = now;
+        
+        if (gameStarted) {
+            updateAircraft(dt);
+            updateMole(dt);
+            updateBeacons();
+            updatePredictionCircle(dt);
+            updateDetectionUI();
+            updateHeadingDisplay();
+        }
+        
+        render();
+        requestAnimationFrame(update);
+    }
+    
+    function worldToScreen(x, y) {
+        const currentZoom = ZOOM_LEVELS[gameState.view.zoom];
+        const scale = canvas.width / currentZoom;
+        return {
+            x: canvas.width / 2 + (x - gameState.view.offsetX) * scale,
+            y: canvas.height / 2 - (y - gameState.view.offsetY) * scale
+        };
+    }
+    
+    function screenToWorld(screenX, screenY) {
+        const currentZoom = ZOOM_LEVELS[gameState.view.zoom];
+        const scale = canvas.width / currentZoom;
+        return {
+            x: (screenX - canvas.width / 2) / scale + gameState.view.offsetX,
+            y: -(screenY - canvas.height / 2) / scale + gameState.view.offsetY
+        };
+    }
+    
+    function render() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        const currentZoom = ZOOM_LEVELS[gameState.view.zoom];
+        const scale = canvas.width / currentZoom;
+        
+        // Grid
+        ctx.strokeStyle = '#333';
+        ctx.lineWidth = 1;
+        for (let i = -MAP_SIZE / 2; i <= MAP_SIZE / 2; i++) {
+            const s1 = worldToScreen(i, -MAP_SIZE / 2);
+            const e1 = worldToScreen(i, MAP_SIZE / 2);
+            ctx.beginPath();
+            ctx.moveTo(s1.x, s1.y);
+            ctx.lineTo(e1.x, e1.y);
+            ctx.stroke();
+            
+            const s2 = worldToScreen(-MAP_SIZE / 2, i);
+            const e2 = worldToScreen(MAP_SIZE / 2, i);
+            ctx.beginPath();
+            ctx.moveTo(s2.x, s2.y);
+            ctx.lineTo(e2.x, e2.y);
+            ctx.stroke();
+        }
+        
+        // Map boundary
+        ctx.strokeStyle = '#f00';
+        ctx.lineWidth = 2;
+        const tl = worldToScreen(-MAP_SIZE / 2, MAP_SIZE / 2);
+        const br = worldToScreen(MAP_SIZE / 2, -MAP_SIZE / 2);
+        ctx.strokeRect(tl.x, tl.y, br.x - tl.x, br.y - tl.y);
+        
+        // Beacons
+        gameState.beacons.forEach(beacon => {
+            const pos = worldToScreen(beacon.x, beacon.y);
+            ctx.fillStyle = '#4CAF50';
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(beacon.id, pos.x, pos.y);
+            
+            if (beacon.bearing !== null) {
+                const alpha = beacon.fadeAlpha;
+                ctx.strokeStyle = `rgba(255, 255, 0, ${alpha * 0.6})`;
+                ctx.lineWidth = 2;
+                const endX = beacon.x + Math.sin(beacon.bearing) * 1.5;
+                const endY = beacon.y + Math.cos(beacon.bearing) * 1.5;
+                const endPos = worldToScreen(endX, endY);
+                ctx.beginPath();
+                ctx.moveTo(pos.x, pos.y);
+                ctx.lineTo(endPos.x, endPos.y);
+                ctx.stroke();
+            }
+        });
+        
+        // Marks
+        gameState.marks.forEach(mark => {
+            const pos = worldToScreen(mark.x, mark.y);
+            ctx.strokeStyle = '#f00';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(pos.x - 6, pos.y - 6);
+            ctx.lineTo(pos.x + 6, pos.y + 6);
+            ctx.moveTo(pos.x + 6, pos.y - 6);
+            ctx.lineTo(pos.x - 6, pos.y + 6);
+            ctx.stroke();
+        });
+        
+        // Prediction circle
+        if (gameState.predictionCircle) {
+            const pos = worldToScreen(gameState.predictionCircle.x, gameState.predictionCircle.y);
+            const radius = gameState.predictionCircle.radius * scale;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.arc(pos.x, pos.y, radius, 0, Math.PI * 2);
+            ctx.stroke();
+            ctx.setLineDash([]);
+        }
+        
+        // Mole history
+        if (gameState.peekMode) {
+            ctx.fillStyle = 'rgba(100, 150, 255, 0.5)';
+            gameState.mole.history.forEach(point => {
+                const pos = worldToScreen(point.x, point.y);
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+        
+        // Aircraft
+        const acPos = worldToScreen(gameState.aircraft.x, gameState.aircraft.y);
+        const rangeRadiusFixed = FIXED_RANGE * scale;
+        const rangeRadius = BEACON_RANGE * scale;
+
+        ctx.strokeStyle = 'rgba(100, 100, 100, 0.4)'; 
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(acPos.x, acPos.y, rangeRadiusFixed, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(244, 67, 54, 0.3)'; 
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(acPos.x, acPos.y, rangeRadius, 0, Math.PI * 2);
+        ctx.stroke();
+        
+        ctx.save();
+        ctx.translate(acPos.x, acPos.y);
+        ctx.rotate(gameState.aircraft.heading);
+        ctx.fillStyle = '#0ff';
+        ctx.beginPath();
+        ctx.moveTo(0, -10);
+        ctx.lineTo(-6, 10);
+        ctx.lineTo(0, 6);
+        ctx.lineTo(6, 10);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+        
+        // Prediction path
+        const predTime = 120;
+        const steps = 120;
+        const pdt = predTime / steps;
+        let px = gameState.aircraft.x;
+        let py = gameState.aircraft.y;
+        let ph = gameState.aircraft.heading;
+        const pb = gameState.aircraft.bank;
+        const ps = gameState.aircraft.speed;
+        const g = 32.2;
+        const pbr = pb * Math.PI / 180;
+        const pspd = ps * 6076;
+        const ptr = (g * Math.tan(pbr)) / pspd;
+        
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([3, 3]);
+        ctx.beginPath();
+        for (let i = 0; i < steps; i++) {
+            const ppos = worldToScreen(px, py);
+            if (i === 0) ctx.moveTo(ppos.x, ppos.y);
+            else ctx.lineTo(ppos.x, ppos.y);
+            ph += ptr * pdt;
+            px += Math.sin(ph) * ps * pdt;
+            py += Math.cos(ph) * ps * pdt;
+        }
+        ctx.stroke();
+        ctx.setLineDash([]);
+        
+        // Minimap
+        mmCtx.clearRect(0, 0, minimap.width, minimap.height);
+        const mscale = minimap.width / MAP_SIZE;
+        mmCtx.strokeStyle = '#666';
+        mmCtx.lineWidth = 2;
+        mmCtx.strokeRect(0, 0, minimap.width, minimap.height);
+        
+        const vw = currentZoom * mscale;
+        const vh = currentZoom * mscale;
+        const vx = minimap.width / 2 + gameState.view.offsetX * mscale - vw / 2;
+        const vy = minimap.height / 2 - gameState.view.offsetY * mscale - vh / 2;
+        mmCtx.strokeStyle = '#4CAF50';
+        mmCtx.lineWidth = 1;
+        mmCtx.strokeRect(vx, vy, vw, vh);
+        
+        const acX = minimap.width / 2 + gameState.aircraft.x * mscale;
+        const acY = minimap.height / 2 - gameState.aircraft.y * mscale;
+        mmCtx.fillStyle = '#0ff';
+        mmCtx.beginPath();
+        mmCtx.arc(acX, acY, 3, 0, Math.PI * 2);
+        mmCtx.fill();
+    }
+    
+    // Event handlers
+    document.getElementById('bankSlider').addEventListener('input', e => {
+        gameState.aircraft.bank = parseFloat(e.target.value);
+        updateBankValue();
+    });
+    
+    function setActiveMode(mode) {
+        const prev = gameState.activeMode;
+        gameState.activeMode = gameState.activeMode === mode ? null : mode;
+        
+        // Remove active class from all buttons
+        ['dropBeaconBtn', 'predictBtn', 'markBtn', 'navigateBtn', 'eraserBtn'].forEach(id => {
+            document.getElementById(id).classList.remove('active');
+        });
+        
+        // Add active class to current mode button
+        if (gameState.activeMode) {
+            const modeToButton = {
+                'dropBeacon': 'dropBeaconBtn',
+                'predict': 'predictBtn',
+                'mark': 'markBtn',
+                'navigate': 'navigateBtn',
+                'eraser': 'eraserBtn'
+            };
+            const buttonId = modeToButton[gameState.activeMode];
+            if (buttonId) {
+                document.getElementById(buttonId).classList.add('active');
+            }
+        }
+        
+        // Show/hide zoom buttons for navigate mode
+        document.getElementById('zoomButtons').classList.toggle('visible', gameState.activeMode === 'navigate');
+        
+        // Handle bank slider lock for dropBeacon mode
+        const slider = document.getElementById('bankSlider');
+        if (gameState.activeMode === 'dropBeacon') {
+            gameState.aircraft.bank = 0;
+            slider.value = 0;
+            slider.disabled = true;
+            updateBankValue();
+        } else if (prev === 'dropBeacon') {
+            slider.disabled = false;
+        }
+    }
+    
+    document.getElementById('dropBeaconBtn').addEventListener('click', () => setActiveMode('dropBeacon'));
+    document.getElementById('predictBtn').addEventListener('click', () => setActiveMode('predict'));
+    document.getElementById('markBtn').addEventListener('click', () => setActiveMode('mark'));
+    document.getElementById('navigateBtn').addEventListener('click', () => setActiveMode('navigate'));
+    document.getElementById('eraserBtn').addEventListener('click', () => setActiveMode('eraser'));
+    
+    document.getElementById('peekBtn').addEventListener('click', () => {
+        gameState.peekMode = !gameState.peekMode;
+        document.getElementById('peekBtn').classList.toggle('active', gameState.peekMode);
+    });
+    
+    document.getElementById('catchMoleBtn').addEventListener('click', () => {
+        const dx = gameState.mole.x - gameState.aircraft.x;
+        const dy = gameState.mole.y - gameState.aircraft.y;
+        const dist = Math.sqrt(dx ** 2 + dy ** 2);
+        
+        if (dist <= 0.1) {
+            alert('두더지를 잡았습니다! 승리!');
+            gameStarted = false;
+            document.getElementById('startScreen').classList.remove('hidden');
+        } else {
+            catchAttemptsFailed++;
+            if (catchAttemptsFailed >= 2) {
+                alert('두 번 실패! 미션 실패!');
+                gameStarted = false;
+                document.getElementById('startScreen').classList.remove('hidden');
+            } else {
+                alert(`실패! (${catchAttemptsFailed}/2)`);
+            }
+        }
+    });
+    
+    document.getElementById('startBtn').addEventListener('click', () => {
+        document.getElementById('startScreen').classList.add('hidden');
+        gameStarted = true;
+        initGame();
+    });
+    
+    document.getElementById('resetBtn').addEventListener('click', () => {
+        gameState.activeMode = null;
+        ['dropBeaconBtn', 'predictBtn', 'markBtn', 'navigateBtn', 'eraserBtn', 'peekBtn'].forEach(id => {
+            document.getElementById(id).classList.remove('active');
+        });
+        document.getElementById('zoomButtons').classList.remove('visible');
+        document.getElementById('bankSlider').disabled = false;
+        gameState.peekMode = false;
+        gameStarted = false;
+        document.getElementById('startScreen').classList.remove('hidden');
+    });
+    
+    document.querySelectorAll('.zoom-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            gameState.view.zoom = parseInt(btn.getAttribute('data-zoom'));
+            const cz = ZOOM_LEVELS[gameState.view.zoom];
+            const mo = (MAP_SIZE - cz) / 2;
+            gameState.view.offsetX = Math.max(-mo, Math.min(mo, gameState.view.offsetX));
+            gameState.view.offsetY = Math.max(-mo, Math.min(mo, gameState.view.offsetY));
+            updateZoomDisplay();
+        });
+    });
+    
+    let isDragging = false;
+    let dragStart = { x: 0, y: 0 };
+    
+    canvas.addEventListener('mousedown', handleClick);
+    canvas.addEventListener('touchstart', handleClick);
+    canvas.addEventListener('mousemove', handleDrag);
+    canvas.addEventListener('touchmove', handleDrag);
+    canvas.addEventListener('mouseup', () => isDragging = false);
+    canvas.addEventListener('touchend', () => isDragging = false);
+    
+    function handleClick(e) {
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX || e.touches[0].clientX) - rect.left;
+        const y = (e.clientY || e.touches[0].clientY) - rect.top;
+        const worldPos = screenToWorld(x, y);
+        
+        if (gameState.activeMode === 'navigate') {
+            isDragging = true;
+            dragStart = { x, y };
+            return;
+        }
+        
+        if (gameState.activeMode === 'dropBeacon') {
+            if (gameState.beacons.length < 30) {
+                ctx.fillStyle = 'rgba(100, 150, 255, 0.5)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                gameState.beacons.push({
+                    id: gameState.beacons.length + 1,
+                    x: gameState.aircraft.x,
+                    y: gameState.aircraft.y,
+                    bearing: null,
+                    lastUpdate: Date.now(),
+                    nextUpdate: Date.now() + 30000,
+                    createdAt: Date.now(),
+                    fadeOut: false,
+                    fadeAlpha: 1
+                });
+            }
+            setActiveMode(null);
+        } else if (gameState.activeMode === 'predict') {
+            gameState.predictionCircle = {
+                x: worldPos.x,
+                y: worldPos.y,
+                radius: 0,
+                speed: MOLE_SPEED / 3600,
+                startTime: Date.now()
+            };
+            setActiveMode(null);
+        } else if (gameState.activeMode === 'mark') {
+            gameState.marks.push({ x: worldPos.x, y: worldPos.y });
+            setActiveMode(null);
+        } else if (gameState.activeMode === 'eraser') {
+            for (let i = gameState.marks.length - 1; i >= 0; i--) {
+                const mark = gameState.marks[i];
+                const dx = mark.x - worldPos.x;
+                const dy = mark.y - worldPos.y;
+                if (Math.sqrt(dx ** 2 + dy ** 2) < 0.2) {
+                    gameState.marks.splice(i, 1);
+                    break;
+                }
+            }
+            if (gameState.predictionCircle) {
+                const dx = gameState.predictionCircle.x - worldPos.x;
+                const dy = gameState.predictionCircle.y - worldPos.y;
+                if (Math.sqrt(dx ** 2 + dy ** 2) < gameState.predictionCircle.radius) {
+                    gameState.predictionCircle = null;
+                }
+            }
+        }
+    }
+    
+    function handleDrag(e) {
+        if (!isDragging || gameState.activeMode !== 'navigate') return;
+        e.preventDefault();
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX || e.touches[0].clientX) - rect.left;
+        const y = (e.clientY || e.touches[0].clientY) - rect.top;
+        const cz = ZOOM_LEVELS[gameState.view.zoom];
+        const scale = canvas.width / cz;
+        const dx = (x - dragStart.x) / scale;
+        const dy = (y - dragStart.y) / scale;
+        gameState.view.offsetX -= dx;
+        gameState.view.offsetY += dy;
+        const mo = (MAP_SIZE - cz) / 2;
+        gameState.view.offsetX = Math.max(-mo, Math.min(mo, gameState.view.offsetX));
+        gameState.view.offsetY = Math.max(-mo, Math.min(mo, gameState.view.offsetY));
+        dragStart = { x, y };
+    }
+    
+    update();
+})();
+</script>
+</body>
+</html>
