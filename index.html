@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
@@ -10,339 +11,344 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: white;
-            overflow: hidden;
-        }
-        
-        #container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
-        
-        #statusBar {
-            background: linear-gradient(180deg, #2a2a3e 0%, #232338 100%);
-            padding: 15px 25px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 3px solid #4CAF50;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-        }
-        
-        #statusBar .status-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 14px;
-        }
-        
-        #detectionTimer {
-            font-size: 28px;
-            font-weight: bold;
-            color: #4CAF50;
-            text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
-            font-family: 'Courier New', monospace;
-        }
-        
-        #detectionStatus {
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 14px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        }
-        
-        #detectionStatus.detecting {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-            color: white;
-        }
-        
-        #detectionStatus.unknown {
-            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
-            color: white;
-        }
-        
-        #currentZoom, #currentHeading {
-            margin-left: 10px;
-            font-weight: bold;
-            color: #4CAF50;
-            text-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
-            font-family: 'Courier New', monospace;
-        }
-        
-        #canvasContainer {
-            flex: 1;
-            position: relative;
-            background: #0a0a0a;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-        
-        #canvas {
-            display: block;
-            max-width: 100%;
-            max-height: 100%;
-            aspect-ratio: 1 / 1;
-        }
-        
-        #minimap {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            width: 112px;
-            height: 112px;
-            border: 2px solid #666;
-            background: rgba(0, 0, 0, 0.5);
-            opacity: 0.7;
-        }
-        
-        #controlPanel {
-            background: linear-gradient(180deg, #232338 0%, #1a1a2e 100%);
-            padding: 12px 15px;
-            border-top: 3px solid #4CAF50;
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-            justify-content: center;
-            box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
-        }
-        
-        .control-group {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-            background: rgba(255,255,255,0.05);
-            padding: 8px 12px;
-            border-radius: 10px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        
-        .control-group label {
-            font-weight: 600;
-            font-size: 12px;
-            color: #aaa;
-        }
-        
-        button {
-            padding: 8px 16px;
-            font-size: 12px;
-            font-weight: 600;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            background: linear-gradient(135deg, #4a4a5e 0%, #3a3a4e 100%);
-            color: white;
-            transition: all 0.3s;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-        
-        button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-            background: linear-gradient(135deg, #5a5a6e 0%, #4a4a5e 100%);
-        }
-        
-        button.active {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
-        }
-        
-        button:disabled {
-            background: linear-gradient(135deg, #333 0%, #2a2a2a 100%);
-            color: #666;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-        
-        #bankSlider {
-            width: 180px;
-            height: 6px;
-            -webkit-appearance: none;
-            appearance: none;
-            background: linear-gradient(90deg, #f44336 0%, #888 50%, #4CAF50 100%);
-            outline: none;
-            border-radius: 3px;
-        }
-        
-        #bankSlider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px;
-            height: 20px;
-            background: white;
-            cursor: pointer;
-            border-radius: 50%;
-            border: 2px solid #4CAF50;
-        }
-        
-        #bankSlider::-moz-range-thumb {
-            width: 20px;
-            height: 20px;
-            background: white;
-            cursor: pointer;
-            border-radius: 50%;
-            border: 2px solid #4CAF50;
-        }
-        
-        #bankSlider:disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-        }
-        
-        #bankValue {
-            min-width: 55px;
-            text-align: center;
-            font-weight: bold;
-            font-size: 14px;
-            color: #4CAF50;
-            font-family: 'Courier New', monospace;
-        }
-        
-        .bank-label {
-            font-size: 11px;
-            font-weight: bold;
-            color: #888;
-            min-width: 12px;
-        }
-        
-        .bank-label.left { color: #f44336; }
-        .bank-label.right { color: #4CAF50; }
-        
-        #catchMoleBtn {
-            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
-            font-weight: bold;
-            font-size: 13px;
-            padding: 10px 20px;
-        }
-        
-        #catchMoleBtn:not(:disabled) {
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-        }
-        
-        #resetBtn {
-            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
-        }
-        
-        #startScreen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        
-        #startScreen.hidden { display: none; }
-        
-        #startScreen h1 {
-            font-size: 52px;
-            margin-bottom: 40px;
-            color: #4CAF50;
-            text-shadow: 0 0 30px rgba(76, 175, 80, 0.6);
-        }
-        
-        #startBtn {
-            padding: 20px 60px;
-            font-size: 24px;
-            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
-        }
-        
-        #zoomButtons {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            display: none;
-            flex-direction: column;
-            gap: 8px;
-            background: rgba(35, 35, 56, 0.95);
-            padding: 12px;
-            border-radius: 10px;
-        }
-        
-        #zoomButtons.visible { display: flex; }
-        #zoomButtons button { padding: 8px 16px; min-width: 50px; }
-    </style>
+
+```
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        color: white;
+        overflow: hidden;
+    }
+    
+    #container {
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+    }
+    
+    #statusBar {
+        background: linear-gradient(180deg, #2a2a3e 0%, #232338 100%);
+        padding: 15px 25px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 3px solid #4CAF50;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    
+    #statusBar .status-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+    }
+    
+    #detectionTimer {
+        font-size: 28px;
+        font-weight: bold;
+        color: #4CAF50;
+        text-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+        font-family: 'Courier New', monospace;
+    }
+    
+    #detectionStatus {
+        padding: 8px 20px;
+        border-radius: 20px;
+        font-weight: bold;
+        font-size: 14px;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+    
+    #detectionStatus.detecting {
+        background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        color: white;
+    }
+    
+    #detectionStatus.unknown {
+        background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+        color: white;
+    }
+    
+    #currentZoom, #currentHeading {
+        margin-left: 10px;
+        font-weight: bold;
+        color: #4CAF50;
+        text-shadow: 0 0 8px rgba(76, 175, 80, 0.5);
+        font-family: 'Courier New', monospace;
+    }
+    
+    #canvasContainer {
+        flex: 1;
+        position: relative;
+        background: #0a0a0a;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        overflow: hidden;
+    }
+    
+    #canvas {
+        display: block;
+        max-width: 100%;
+        max-height: 100%;
+        aspect-ratio: 1 / 1;
+    }
+    
+    #minimap {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        width: 112px;
+        height: 112px;
+        border: 2px solid #666;
+        background: rgba(0, 0, 0, 0.5);
+        opacity: 0.7;
+    }
+    
+    #controlPanel {
+        background: linear-gradient(180deg, #232338 0%, #1a1a2e 100%);
+        padding: 12px 15px;
+        border-top: 3px solid #4CAF50;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: center;
+        box-shadow: 0 -4px 15px rgba(0,0,0,0.3);
+    }
+    
+    .control-group {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        background: rgba(255,255,255,0.05);
+        padding: 8px 12px;
+        border-radius: 10px;
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .control-group label {
+        font-weight: 600;
+        font-size: 12px;
+        color: #aaa;
+    }
+    
+    button {
+        padding: 8px 16px;
+        font-size: 12px;
+        font-weight: 600;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        background: linear-gradient(135deg, #4a4a5e 0%, #3a3a4e 100%);
+        color: white;
+        transition: all 0.3s;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        background: linear-gradient(135deg, #5a5a6e 0%, #4a4a5e 100%);
+    }
+    
+    button.active {
+        background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        box-shadow: 0 4px 15px rgba(76, 175, 80, 0.4);
+    }
+    
+    button:disabled {
+        background: linear-gradient(135deg, #333 0%, #2a2a2a 100%);
+        color: #666;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
+    
+    #bankSlider {
+        width: 180px;
+        height: 6px;
+        -webkit-appearance: none;
+        appearance: none;
+        background: linear-gradient(90deg, #f44336 0%, #888 50%, #4CAF50 100%);
+        outline: none;
+        border-radius: 3px;
+    }
+    
+    #bankSlider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 20px;
+        height: 20px;
+        background: white;
+        cursor: pointer;
+        border-radius: 50%;
+        border: 2px solid #4CAF50;
+    }
+    
+    #bankSlider::-moz-range-thumb {
+        width: 20px;
+        height: 20px;
+        background: white;
+        cursor: pointer;
+        border-radius: 50%;
+        border: 2px solid #4CAF50;
+    }
+    
+    #bankSlider:disabled {
+        opacity: 0.4;
+        cursor: not-allowed;
+    }
+    
+    #bankValue {
+        min-width: 55px;
+        text-align: center;
+        font-weight: bold;
+        font-size: 14px;
+        color: #4CAF50;
+        font-family: 'Courier New', monospace;
+    }
+    
+    .bank-label {
+        font-size: 11px;
+        font-weight: bold;
+        color: #888;
+        min-width: 12px;
+    }
+    
+    .bank-label.left { color: #f44336; }
+    .bank-label.right { color: #4CAF50; }
+    
+    #catchMoleBtn {
+        background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+        font-weight: bold;
+        font-size: 13px;
+        padding: 10px 20px;
+    }
+    
+    #catchMoleBtn:not(:disabled) {
+        background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    }
+    
+    #resetBtn {
+        background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+    }
+    
+    #startScreen {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000;
+    }
+    
+    #startScreen.hidden { display: none; }
+    
+    #startScreen h1 {
+        font-size: 52px;
+        margin-bottom: 40px;
+        color: #4CAF50;
+        text-shadow: 0 0 30px rgba(76, 175, 80, 0.6);
+    }
+    
+    #startBtn {
+        padding: 20px 60px;
+        font-size: 24px;
+        background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+    }
+    
+    #zoomButtons {
+        position: absolute;
+        top: 20px;
+        left: 20px;
+        display: none;
+        flex-direction: column;
+        gap: 8px;
+        background: rgba(35, 35, 56, 0.95);
+        padding: 12px;
+        border-radius: 10px;
+    }
+    
+    #zoomButtons.visible { display: flex; }
+    #zoomButtons button { padding: 8px 16px; min-width: 50px; }
+</style>
+```
+
 </head>
 <body>
     <div id="startScreen">
         <h1>두더지를 잡아라</h1>
         <button id="startBtn">시작</button>
     </div>
-    
-    <div id="container">
-        <div id="statusBar">
-            <div class="status-item">
-                <span>감지:</span>
-                <span id="detectionTimer">00:00</span>
-            </div>
-            <div class="status-item">
-                <span id="detectionStatus" class="unknown">어디갔누?</span>
-            </div>
-            <div class="status-item">
-                <span>줌:</span>
-                <span id="currentZoom">4x</span>
-            </div>
-            <div class="status-item">
-                <span>헤딩:</span>
-                <span id="currentHeading">000</span>
-            </div>
+
+```
+<div id="container">
+    <div id="statusBar">
+        <div class="status-item">
+            <span>감지:</span>
+            <span id="detectionTimer">00:00</span>
         </div>
-        
-        <div id="canvasContainer">
-            <canvas id="canvas"></canvas>
-            <canvas id="minimap"></canvas>
-            <div id="zoomButtons">
-                <button class="zoom-btn" data-zoom="0">20</button>
-                <button class="zoom-btn" data-zoom="1">16</button>
-                <button class="zoom-btn" data-zoom="2">8</button>
-                <button class="zoom-btn active" data-zoom="3">4</button>
-                <button class="zoom-btn" data-zoom="4">2</button>
-                <button class="zoom-btn" data-zoom="5">1</button>
-            </div>
+        <div class="status-item">
+            <span id="detectionStatus" class="unknown">어디갔누?</span>
         </div>
-        
-        <div id="controlPanel">
-            <div class="control-group">
-                <label>Bank:</label>
-                <span class="bank-label left">L</span>
-                <input type="range" id="bankSlider" min="-30" max="30" value="0" step="1">
-                <span class="bank-label right">R</span>
-                <span id="bankValue">0°</span>
-            </div>
-            
-            <div class="control-group">
-                <button id="dropBeaconBtn">방울놓기</button>
-                <button id="predictBtn">예상하기</button>
-                <button id="markBtn">마크하기</button>
-                <button id="navigateBtn">화면조정</button>
-                <button id="peekBtn">엿보기</button>
-                <button id="eraserBtn">지우개</button>
-            </div>
-            
-            <div class="control-group">
-                <button id="catchMoleBtn" disabled>두더지 잡기</button>
-                <button id="resetBtn">리셋</button>
-            </div>
+        <div class="status-item">
+            <span>줌:</span>
+            <span id="currentZoom">4x</span>
+        </div>
+        <div class="status-item">
+            <span>헤딩:</span>
+            <span id="currentHeading">000</span>
         </div>
     </div>
     
+    <div id="canvasContainer">
+        <canvas id="canvas"></canvas>
+        <canvas id="minimap"></canvas>
+        <div id="zoomButtons">
+            <button class="zoom-btn" data-zoom="0">20</button>
+            <button class="zoom-btn" data-zoom="1">16</button>
+            <button class="zoom-btn" data-zoom="2">8</button>
+            <button class="zoom-btn active" data-zoom="3">4</button>
+            <button class="zoom-btn" data-zoom="4">2</button>
+            <button class="zoom-btn" data-zoom="5">1</button>
+        </div>
+    </div>
+    
+    <div id="controlPanel">
+        <div class="control-group">
+            <label>Bank:</label>
+            <span class="bank-label left">L</span>
+            <input type="range" id="bankSlider" min="-30" max="30" value="0" step="1">
+            <span class="bank-label right">R</span>
+            <span id="bankValue">0°</span>
+        </div>
+        
+        <div class="control-group">
+            <button id="dropBeaconBtn">방울놓기</button>
+            <button id="predictBtn">예상하기</button>
+            <button id="markBtn">마크하기</button>
+            <button id="navigateBtn">화면조정</button>
+            <button id="peekBtn">엿보기</button>
+            <button id="eraserBtn">지우개</button>
+        </div>
+        
+        <div class="control-group">
+            <button id="catchMoleBtn" disabled>두더지 잡기</button>
+            <button id="resetBtn">리셋</button>
+        </div>
+    </div>
+</div>
+```
+
 <script>
 (function() {
     'use strict';
@@ -360,7 +366,8 @@
     const FIXED_RANGE = 4;
 
     const BEACON_RANGE = 0.5;
-    const DETECTION_REQUIRED_TIME = 1200000; // 20 minutes in milliseconds
+    const BEACON_STABILIZATION_TIME = 60000; // 60초 안정화 시간
+    const DETECTION_REQUIRED_TIME = 1200000; // 20 minutes
     
     let gameStarted = false;
     let catchAttemptsFailed = 0;
@@ -405,7 +412,7 @@
         };
         
         const initialAngle = Math.random() * Math.PI * 2;
-        const initialDistance = Math.random() * 0.2 + 0.2; // 0.2 to 0.4 nm
+        const initialDistance = Math.random() * 0.2 + 0.2;
         const moleX = Math.cos(initialAngle) * initialDistance;
         const moleY = Math.sin(initialAngle) * initialDistance;
         const angleFromCenter = Math.atan2(moleX, moleY);
@@ -425,14 +432,14 @@
         gameState.beacons = [{
             id: 1, x: 0, y: 0, bearing: null,
             lastUpdate: Date.now(),
-            nextUpdate: Date.now() + 30000,
-            createdAt: Date.now() - 30000,
+            nextUpdate: Date.now() + BEACON_STABILIZATION_TIME,
+            createdAt: Date.now() - BEACON_STABILIZATION_TIME,
             fadeOut: false, fadeAlpha: 1
         }];
         
         gameState.marks = [];
         gameState.predictionCircle = null;
-        gameState.view = { zoom: 3, offsetX: 0, offsetY: 0 }; // zoom index 3 = 4nm
+        gameState.view = { zoom: 3, offsetX: 0, offsetY: 0 };
         gameState.activeMode = null;
         gameState.peekMode = false;
         gameState.detectionStartTime = null;
@@ -488,7 +495,7 @@
             const turnRad = (turnDeg * direction) * Math.PI / 180;
             gameState.mole.heading += turnRad;
             gameState.mole.directionChanges++;
-            gameState.mole.speed = Math.floor(Math.random()*7)+3;  // speed changes
+            gameState.mole.speed = (Math.floor(Math.random()*7)+3) / 3600;  // Convert to nm/second
             gameState.mole.nextChangeTime = now + (Math.random() * 4 + 6) * 60000;
         }
         
@@ -511,42 +518,56 @@
         const now = Date.now();
         let anyDetecting = false;
         let syncTime = null;
+        let hasActiveDetection = false;
         
+        // First pass: 감지 판정 및 방위선 업데이트
         gameState.beacons.forEach(beacon => {
             const dx = gameState.mole.x - beacon.x;
             const dy = gameState.mole.y - beacon.y;
             const distance = Math.sqrt(dx ** 2 + dy ** 2);
-            const isActive = now - beacon.createdAt >= 30000;
+            const isActive = now - beacon.createdAt >= BEACON_STABILIZATION_TIME;
             
-            if (distance <= BEACON_RANGE) {
+            // 감지 판정: 안정화된 방울 AND 감지 범위 내
+            if (distance <= BEACON_RANGE && isActive) {
                 anyDetecting = true;
-                if (isActive) {
-                    if (beacon.bearing === null || now >= beacon.nextUpdate) {
-                        beacon.bearing = Math.atan2(dx, dy);
-                        beacon.lastUpdate = now;
-                        beacon.nextUpdate = now + 30000;
-                        beacon.fadeOut = false;
-                        beacon.fadeAlpha = 1;
-                        if (syncTime === null) syncTime = beacon.nextUpdate;
+                
+                if (beacon.bearing === null || now >= beacon.nextUpdate) {
+                    beacon.bearing = Math.atan2(dx, dy);
+                    beacon.lastUpdate = now;
+                    beacon.nextUpdate = now + BEACON_STABILIZATION_TIME;
+                    beacon.fadeOut = false;
+                    beacon.fadeAlpha = 1;
+                    
+                    if (syncTime === null) {
+                        syncTime = beacon.nextUpdate;
                     }
                 }
-            } else {
-                if (beacon.bearing !== null) beacon.fadeOut = true;
+                
+                if (beacon.bearing !== null) {
+                    hasActiveDetection = true;
+                }
+            } else if (distance > BEACON_RANGE) {
+                if (beacon.bearing !== null) {
+                    beacon.fadeOut = true;
+                }
             }
         });
         
-        if (syncTime !== null) {
+        // Second pass: 이미 감지 중인 방울들끼리만 동기화
+        if (syncTime !== null && hasActiveDetection) {
             gameState.beacons.forEach(beacon => {
                 const dx = gameState.mole.x - beacon.x;
                 const dy = gameState.mole.y - beacon.y;
                 const distance = Math.sqrt(dx ** 2 + dy ** 2);
-                const isActive = now - beacon.createdAt >= 30000;
+                const isActive = now - beacon.createdAt >= BEACON_STABILIZATION_TIME;
+                
                 if (distance <= BEACON_RANGE && beacon.bearing !== null && isActive) {
                     beacon.nextUpdate = syncTime;
                 }
             });
         }
         
+        // Third pass: Fade out
         gameState.beacons.forEach(beacon => {
             if (beacon.fadeOut && beacon.bearing !== null) {
                 beacon.fadeAlpha -= 0.02;
@@ -831,12 +852,10 @@
         const prev = gameState.activeMode;
         gameState.activeMode = gameState.activeMode === mode ? null : mode;
         
-        // Remove active class from all buttons
         ['dropBeaconBtn', 'predictBtn', 'markBtn', 'navigateBtn', 'eraserBtn'].forEach(id => {
             document.getElementById(id).classList.remove('active');
         });
         
-        // Add active class to current mode button
         if (gameState.activeMode) {
             const modeToButton = {
                 'dropBeacon': 'dropBeaconBtn',
@@ -851,10 +870,8 @@
             }
         }
         
-        // Show/hide zoom buttons for navigate mode
         document.getElementById('zoomButtons').classList.toggle('visible', gameState.activeMode === 'navigate');
         
-        // Handle bank slider lock for dropBeacon mode
         const slider = document.getElementById('bankSlider');
         if (gameState.activeMode === 'dropBeacon') {
             gameState.aircraft.bank = 0;
@@ -960,7 +977,7 @@
                     y: gameState.aircraft.y,
                     bearing: null,
                     lastUpdate: Date.now(),
-                    nextUpdate: Date.now() + 30000,
+                    nextUpdate: Date.now() + BEACON_STABILIZATION_TIME,
                     createdAt: Date.now(),
                     fadeOut: false,
                     fadeAlpha: 1
@@ -972,7 +989,7 @@
                 x: worldPos.x,
                 y: worldPos.y,
                 radius: 0,
-                speed: MOLE_SPEED / 3600,
+                speed: gameState.mole.speed,  // Use current mole speed
                 startTime: Date.now()
             };
             setActiveMode(null);
@@ -1020,5 +1037,6 @@
     update();
 })();
 </script>
+
 </body>
 </html>
